@@ -71,3 +71,35 @@ class FastMDCalculator(Calculator):
     def clear_cache(self):
         self.backend.clear_graphs()
         self.reset()
+
+    def relax_gpu(self, atoms, config=None, *, update_atoms=True):
+        """Run fixed-cell FIRE through a device-native backend callback.
+
+        This is the opt3-style path: coordinates and FIRE state stay on the
+        model device, while the calculator's regular ASE/NumPy interface is
+        used only before and after the relaxation.  Backends that do not
+        implement ``device_callback`` fail explicitly instead of silently
+        copying positions and forces through the host on every step.
+
+        Constraints and variable-cell filters are intentionally not handled by
+        this low-level driver.  Use the standard ASE optimizer for those
+        workflows.
+        """
+        from .relaxation import GPUFireConfig, run_gpu_fire
+        import torch
+
+        if config is None:
+            config = GPUFireConfig()
+        if atoms.constraints:
+            raise ValueError("relax_gpu currently supports unconstrained fixed-cell structures only")
+        callback = self.backend.device_callback(atoms)
+        positions = torch.as_tensor(
+            atoms.positions,
+            dtype=torch.float64,
+            device=self.backend.device,
+        )
+        result = run_gpu_fire(positions, callback, config)
+        if update_atoms:
+            atoms.positions[...] = result.positions.detach().cpu().numpy()
+            self.reset()
+        return result

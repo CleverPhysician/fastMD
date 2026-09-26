@@ -105,5 +105,18 @@ class ModelBackend(ABC):
     def clear_graphs(self):
         """Release model-specific captures, retaining loaded model weights."""
 
+    def device_callback(self, atoms):
+        """Return a device-native ``positions -> (energy, forces)`` callback.
+
+        This optional hook is used by the fixed-cell GPU FIRE driver.  A
+        backend that only exposes the ASE/NumPy boundary should leave it
+        unimplemented rather than silently adding a host/device copy inside
+        every optimization step.
+        """
+
+        raise NotImplementedError(
+            f"{type(self).__name__} does not expose a device-native relaxation callback"
+        )
+
     def stats(self):
         return {**self._status, "device": str(self.device)}

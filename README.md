@@ -179,9 +179,10 @@ pass temperature in kelvin through `temperature_K`. ASE constraints,
 
 The acceleration here applies to **model inference**. ASE still runs the
 integrator and Python loop, and each call still involves host/device data
-transfers. This release does not expose the original branches' whole-step GPU MD
-as ASE MD or capture the entire MD loop in a CUDA Graph. Initial capture has a
-setup cost, so short jobs may not benefit. Benchmark your own system.
+transfers. For fixed-cell relaxation, the opt3-style device FIRE driver below
+keeps optimizer state on the model device and can capture a complete FIRE step
+in a CUDA Graph. Initial capture has a setup cost, so short jobs may not
+benefit. Benchmark your own system.
 
 ### Geometry and cell relaxation
 
@@ -202,6 +203,30 @@ ALIGNN currently does not expose stress through this interface and cannot be
 used for NPT or cell relaxation here. Cell changes invalidate captures, so
 variable-cell workflows can trigger frequent recapture and may perform better
 with eager inference.
+
+### Fixed-cell opt3 GPU relaxation
+
+Backends that expose a device-native callback can run FIRE without copying
+coordinates and forces through NumPy at every step:
+
+```python
+from fastmd import FastMDCalculator, GPUFireConfig
+
+calc = FastMDCalculator("nequip", checkpoint="nequip.pt", device="cuda")
+result = calc.relax_gpu(
+    atoms,
+    GPUFireConfig(fmax=0.02, steps=200, check_interval=10),
+)
+```
+
+The callback contract is explicit: positions, energy, forces, and FIRE state
+stay on the same device. The lower-level `run_gpu_fire_graph` additionally
+captures one complete fixed-cell FIRE step and reports warmup, capture, and
+replay time. It requires fixed-shape topology and rejects dynamic neighbour
+growth, variable-cell filters, constraints, and silent eager fallback. The
+five WBM adapters provide this callback only when their released evaluator
+exposes a compatible device-tensor interface; otherwise `relax_gpu` fails
+clearly rather than claiming a full-GPU path.
 
 ## 4. CUDA Graph defaults
 

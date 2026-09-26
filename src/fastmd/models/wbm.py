@@ -121,7 +121,7 @@ def _make_external_evaluator(model_name, route, atoms, checkpoint, device, confi
     raise ValueError(f"Unsupported WBM model: {model_name}")
 
 
-def _normalise_output(model_name, output, positions):
+def _normalise_device_output(model_name, output, positions):
     if isinstance(output, dict):
         energy, forces = output.get("energy"), output.get("forces")
     elif hasattr(output, "energy") and hasattr(output, "forces"):
@@ -145,9 +145,14 @@ def _normalise_output(model_name, output, positions):
         raise ValueError(f"{model_name} evaluator moved results off {positions.device}")
     if tuple(forces.shape) != tuple(positions.shape) or energy.numel() != 1:
         raise ValueError(f"{model_name} output shape does not match one structure")
+    return energy.detach().reshape(()).to(torch.float64), forces.detach().to(torch.float64)
+
+
+def _normalise_output(model_name, output, positions):
+    energy, forces = _normalise_device_output(model_name, output, positions)
     return {
-        "energy": energy.detach().reshape(()).to(torch.float64).cpu().numpy().item(),
-        "forces": forces.detach().to(torch.float64).cpu().numpy().copy(),
+        "energy": energy.cpu().numpy().item(),
+        "forces": forces.cpu().numpy().copy(),
     }
 
 
@@ -189,6 +194,27 @@ class WBMModelBackend(ModelBackend):
         positions = torch.as_tensor(atoms.positions, dtype=torch.float64, device=self.device)
         output = self._ensure_evaluator(atoms)(positions)
         return _normalise_output(self.model_name, output, positions)
+
+    def device_callback(self, atoms):
+        """Return the WBM evaluator without a per-step D2H conversion.
+
+        The evaluator and its fixed model topology are created once for the
+        structure.  The returned callback accepts device-resident float64
+        coordinates and returns device-resident energy and forces for the
+        GPU FIRE driver.
+        """
+        if self.device.type != "cuda":
+            raise RuntimeError("device-native relaxation requires a CUDA backend")
+        evaluator = self._ensure_evaluator(atoms)
+        expected_shape = (len(atoms), 3)
+
+        def evaluate(positions):
+            if (positions.device != self.device or positions.dtype != torch.float64
+                    or tuple(positions.shape) != expected_shape):
+                raise ValueError("positions must match the WBM evaluator device, dtype and shape")
+            return _normalise_device_output(self.model_name, evaluator(positions), positions)
+
+        return evaluate
 
     def _predict_eager(self, atoms, properties):
         return self._predict(atoms)

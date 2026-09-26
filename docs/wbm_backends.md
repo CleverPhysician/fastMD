@@ -13,4 +13,8 @@ calc = FastMDCalculator("dpa4", checkpoint="DPA4.pt", device="cuda")
 
 WBM 模型包不是 fastMD 的 PyPI 依赖，需要在目标环境中单独安装，并确保其 `md_stages.opt1/opt2` 接口可导入。fastMD 只在实际选择对应模型时导入这些包，因此不影响已有的 MatRIS、CHGNet 和 ALIGNN 用户。
 
-当前接口仍然一次处理一个 ASE `Atoms`。五模型的多结构并行、GPU FIRE 整步捕获和容量恢复，应放在独立的 relaxation driver 中，通过本后端的 `predict` 接口调用；本次接入没有把旧的实验性批处理脚本复制进公共 calculator。
+当前接口仍然一次处理一个 ASE `Atoms`。固定晶胞的 opt3 GPU FIRE 核心位于
+`fastmd.relaxation`，通过后端的 `device_callback` 接口调用，避免每一步经过
+NumPy。它只接受固定形状、无约束结构；动态邻居容量恢复、变胞和多结构批处理仍
+需要各模型单独实现，不能从 `predict` 接口反推成全 GPU 路径。本次没有把旧的
+实验性批处理脚本复制进公共 calculator。
