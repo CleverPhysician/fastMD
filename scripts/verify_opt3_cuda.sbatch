@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=xrdmlip
-#SBATCH --account=intern004
+#SBATCH --account=hmt03
 #SBATCH --partition=intelgpu80g
 #SBATCH --gres=gpu:1
 #SBATCH --cpus-per-task=4
