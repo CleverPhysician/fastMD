@@ -66,11 +66,20 @@ All models use `FastMDCalculator(model, checkpoint=..., device=...)`.
 | `matris` | Downloads `matris_10m_oam` by default; or a local `.pth.tar` file | Energy, forces, stress, magnetic moments | Energy, forces, stress, magnetic moments |
 | `chgnet` | Bundled 0.3.0 weights; or a local `.pth.tar` file | Energy, forces, stress, magnetic moments | Energy, forces |
 | `alignn` | Requires a directory containing `config.json` and `best_model.pt` | Energy, forces | Energy, forces |
+| `dpa4` | Requires the released DPA4 checkpoint and WBM runtime | Energy, forces | Energy, forces |
+| `nequip` | Requires the released NequIP checkpoint and WBM runtime | Energy, forces | Energy, forces |
+| `orbv3` | Requires the released ORB-v3 checkpoint and WBM runtime | Energy, forces | Energy, forces |
+| `sevennet` | Requires the released SevenNet checkpoint and WBM runtime | Energy, forces | Energy, forces |
+| `tace` | Requires the released TACE checkpoint and WBM runtime | Energy, forces | — |
 
 This table describes the implemented interfaces. See the
 [validation record](docs/validation.md) for what has been tested on the current
 node. The CUDA paths were migrated from the original branches and still need
 the numerical consistency checks below on your target GPU.
+
+The five WBM adapters are documented separately in
+[WBM backends](docs/wbm_backends.md). Their model packages remain optional and
+are imported only when the corresponding model is selected.
 
 ```python
 from fastmd import FastMDCalculator

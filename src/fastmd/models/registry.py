@@ -5,6 +5,11 @@ _FACTORIES = {
     "matris": "fastmd.models.matris:MatRISModel",
     "chgnet": "fastmd.models.chgnet:CHGNetModel",
     "alignn": "fastmd.models.alignn:ALIGNNModel",
+    "dpa4": "fastmd.models.wbm:DPA4Model",
+    "nequip": "fastmd.models.wbm:NequIPModel",
+    "orbv3": "fastmd.models.wbm:ORBV3Model",
+    "sevennet": "fastmd.models.wbm:SevenNetModel",
+    "tace": "fastmd.models.wbm:TACEModel",
 }
 
 
