@@ -1,0 +1,11 @@
+fastMD contains namespaced inference code migrated from MatRIS-09bk branches:
+- MatRIS (main): BSD-3-Clause; see licenses/matris.txt.
+- CHGNet (origin/CHGNet_CG): see licenses/chgnet.txt.
+- ALIGNN (origin/ALIGNN_CG): see licenses/alignn.txt.
+
+Exact source commits and migrated paths are recorded in docs/sources.json.
+CHGNet 0.3.0 pretrained weights are retained from the CHGNet branch.
+Other model weights are supplied by the user or downloaded by the MatRIS loader.
+The original licenses, attributions and applicable model/data terms continue to apply.
+The new fastMD interface code is distributed under the BSD-3-Clause license in LICENSE.
+TorchSim is an architectural reference, not a runtime dependency or vendored source.

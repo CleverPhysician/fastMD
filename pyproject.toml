@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "fastmd-mlip"
+version = "0.1.0"
+description = "ASE-first MLIP inference with optional CUDA Graph acceleration"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = ["ase>=3.23", "numpy>=1.26", "torch>=2.6"]
+
+[project.optional-dependencies]
+matris = ["pymatgen>=2024.9.10"]
+chgnet = ["pymatgen>=2024.9.10", "typing-extensions>=4.5"]
+alignn = ["jarvis-tools>=2024.10.30", "dgl>=1.1,<2", "pydantic-settings>=2", "pandas", "matplotlib", "scikit-learn", "requests", "tqdm"]
+cuda = ["torch>=2.8", "warp-lang>=1.10", "nvalchemi-toolkit-ops==0.2.0"]
+test = ["pytest>=8", "build"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+"fastmd._vendor.chgnet" = ["pretrained/0.3.0/*.pth.tar"]
+"fastmd._vendor.alignn" = ["ff/*.json"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = ["integration: runs real pretrained models", "cuda: requires NVIDIA CUDA"]
+
+[tool.setuptools]
+license-files = ["LICENSE", "NOTICE", "licenses/*.txt"]
